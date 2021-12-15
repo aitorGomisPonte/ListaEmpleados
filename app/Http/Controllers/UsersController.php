@@ -24,8 +24,8 @@ class UsersController extends Controller
             $trabajador = User::find($datos->email)->get();//Buscamos el trabajador por su email
             if($trabajador){ //Comprobamos que se halla encontrado un trabajador
                 if( $trabajador->password == $datos->password){//Si es asi comprobamos la contraseña de este 
-                    $token = crearToken($trabajador);//Si todo va bien entonces nos creamos un token usando la funcion de crear token
-                    $trabajador->api_token = $token;//Nos guardamos la token en ek json 
+                    $token = $this->crearToken($trabajador);//Si todo va bien entonces nos creamos un token usando la funcion de crear token
+                    $trabajador->api_token = $token;//Nos guardamos la token en el json 
                     $trabajador->save();//Guardamos el nuevo Json en la tabla
 
                 } else{//Si la contraseña no coincide entonces llegamos aqui
@@ -42,9 +42,16 @@ class UsersController extends Controller
         }       
         return response()->json($respuesta);//Nos devolbemos una respuesta con un mensaje
     }
+    /*Funcion encargada de hacer kas token*/
+    private function crearToken($trabajador){
+
+        $tokenAux = $trabajador->email;//Aprovechamos que el email y el id son unicos para crearnos una token unica
+        $posiblesNumeros = [0,1,2,3,4,5,6,7,8,9];
+        for ($i=0; $i < 6; $i++) {
+            $tokenAux .= $posiblesNumeros[array_rand($posiblesNumeros)];
+        }
+        return md5($tokenAux);//Encriptamos con md5 el token para no tener problams en los json o rutas 
+    }
 }
-/*Funcion encargada de hacer kas token*/
-function crearToken($trabajador){
-    $tokenAux = $trabajador->email. $trabajador->id;//Aprovechamos que el email y el id son unicos para crearnos una token unica
-    return $tokenAux;
-}
+
+ 

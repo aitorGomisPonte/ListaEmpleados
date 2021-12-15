@@ -21,7 +21,7 @@ class UsersController extends Controller
         $datos = $req->getContent(); //Nos recibimos los datos por el body
         $datos = json_decode($datos); //Decodificamos el json para poder ver los distintos componentes
         try {//Encapsulamos las consultasal servidor por si perdemos la conexion
-            $trabajador = User::find($datos->email)->get();//Buscamos el trabajador por su email
+            $trabajador = User::where("email",$datos->email)->first();//Buscamos el trabajador por su email
             if($trabajador){ //Comprobamos que se halla encontrado un trabajador
                 if( $trabajador->password == $datos->password){//Si es asi comprobamos la contraseña de este 
                     $token = $this->crearToken($trabajador);//Si todo va bien entonces nos creamos un token usando la funcion de crear token

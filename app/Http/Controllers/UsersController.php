@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
 {
@@ -51,6 +52,27 @@ class UsersController extends Controller
             $tokenAux .= $posiblesNumeros[array_rand($posiblesNumeros)];
         }
         return md5($tokenAux);//Encriptamos con md5 el token para no tener problams en los json o rutas 
+    }
+    public function registro(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos);
+        
+        $validator = Validator::make(json_decode($req->getContent(),true),[
+            'name' => "required",
+            'email' => "required|unique:users",
+            'biografia' => "validacion 2",
+            'password' => "validacion 2",
+            'puesto' => "validacion 2",
+            'api_token' => "validacion 2"
+            
+            ]);
+            //Comporbamos el estado del validador
+            if($validator->fails()){
+            return response();
+            }
+
     }
 }
 

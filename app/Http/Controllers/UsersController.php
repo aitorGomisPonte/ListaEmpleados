@@ -24,11 +24,13 @@ class UsersController extends Controller
         try {//Encapsulamos las consultasal servidor por si perdemos la conexion
             $trabajador = User::where("email",$datos->email)->first();//Buscamos el trabajador por su email
             if($trabajador){ //Comprobamos que se halla encontrado un trabajador
+                
                 if( $trabajador->password == $datos->password){//Si es asi comprobamos la contraseña de este 
                     $token = $this->crearToken($trabajador);//Si todo va bien entonces nos creamos un token usando la funcion de crear token
                     $trabajador->api_token = $token;//Nos guardamos la token en el json 
                     $trabajador->save();//Guardamos el nuevo Json en la tabla
-
+                    $respuesta['msg'] = "Se ha echo el login, apitoken creada";
+                    $respuesta['status'] = 1;
                 } else{//Si la contraseña no coincide entonces llegamos aqui
                     $respuesta['msg'] = "La contraseña no coincide con la contraseña del usuario";
                     $respuesta['status'] = 0;
@@ -62,17 +64,34 @@ class UsersController extends Controller
         $validator = Validator::make(json_decode($req->getContent(),true),[
             'name' => "required",
             'email' => "required|unique:users",
-            'biografia' => "validacion 2",
-            'password' => "validacion 2",
-            'puesto' => "validacion 2",
-            'api_token' => "validacion 2"
+            'biografia' => "required",
+            'password' => "required ",
+            'puesto' => "required",
+            
             
             ]);
             //Comporbamos el estado del validador
             if($validator->fails()){
-            return response();
+                $respuesta['msg'] = "Ha habido un fallo con los datos introducidos";
+                $respuesta['status'] = 0;    
+                
+            }else{
+                try {
+                    $user = new User();
+                    $user->name = $datos->name;
+                    $user->email = $datos->email;
+                    $user->biografia = $datos->biografia;
+                    $user->password = $datos->password;
+                    $user->puesto = $datos->puesto;
+                    $user->save();
+                    $respuesta['msg'] = "Se ha registrado el nuevo usuario, con nombre: ".$datos->name;
+                    $respuesta['status'] = 1;  
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0; 
+                }
             }
-
+        return response()->json($respuesta);
     }
 }
 

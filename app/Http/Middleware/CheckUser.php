@@ -18,14 +18,14 @@ class CheckUser
     public function handle(Request $request, Closure $next)
     {
         $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
-
+        $permiso = false;
         $datos = $request->getContent(); //Nos recibimos los datos por el body
         $datos = json_decode($datos); //Decodificamos el json para poder ver los distintos componentes
         
        try {
           $token = $datos->api_token;
           if($token){
-              $user = User::Where($token,"api_token")->first();
+              $user = User::Where("api_token",$token)->first();
               if($user){
                   switch ($user->puesto) {
                       case 'Directivo'||"RRHH":

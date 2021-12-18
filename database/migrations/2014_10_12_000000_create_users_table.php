@@ -22,6 +22,7 @@ class CreateUsersTable extends Migration
             $table->string('puesto');
             $table->string('biografia');
             $table->string('api_token')->unique()->nullable();
+            $table->integer('salario');
             $table->rememberToken();
             $table->timestamps();
         });

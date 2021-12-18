@@ -28,11 +28,11 @@ class CheckUser
               $user = User::Where("api_token",$token)->first();
               if($user){
                   switch ($user->puesto) {
-                      case 'Directivo'||"RRHH":
-                          $permiso = true;
+                      case 'Empleado'://Queremos tener un control en el front donde nos aseguramos de que solo se pueda eleguir tres opciones (Empleado, Directivo, RRHH)
+                          $permiso = false;
                           break;  
                       default:
-                          $permiso = false;
+                          $permiso = true;
                           break;
                   }
               }else{
@@ -48,8 +48,10 @@ class CheckUser
             $respuesta['msg'] = "Permisos correctos";
             $respuesta['status'] = 1;      
             return $next($request);
+        }else{
+            $respuesta['msg'] = "Permisos no correctos";
+            $respuesta['status'] = 0;
+            return response()->json($respuesta);
         }
-        return response()->json($respuesta);
-       
     }
 }

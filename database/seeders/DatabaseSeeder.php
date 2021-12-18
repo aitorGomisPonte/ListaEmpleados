@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $user->password = "1234aitor";
         $user->puesto = "Directivo";
         $user->biografia = "el mejor trabajador de la empresa, siguiente CEO";
+        $user->salario = 20000;
         $user->save();
     }
 }

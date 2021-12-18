@@ -67,6 +67,7 @@ class UsersController extends Controller
             'biografia' => "required",
             'password' => "required ",
             'puesto' => "required",
+            'salario'=> "required",
             
             
             ]);
@@ -83,6 +84,7 @@ class UsersController extends Controller
                     $user->biografia = $datos->biografia;
                     $user->password = $datos->password;
                     $user->puesto = $datos->puesto;
+                    $user->salario= $datos->salario;
                     $user->save();
                     $respuesta['msg'] = "Se ha registrado el nuevo usuario, con nombre: ".$datos->name;
                     $respuesta['status'] = 1;  

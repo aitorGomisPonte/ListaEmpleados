@@ -55,6 +55,23 @@ class UsersController extends Controller
         }
         return md5($tokenAux);//Encriptamos con md5 el token para no tener problams en los json o rutas 
     }
+    private function permisos($datos){//Nos comprobamois los permisoso para saber si es Directivo o RRHH, hacemos una funcion ya que esto se repite en varias funciones
+        $permisos = 0;
+        try {
+            $empleado = User::where('api_token',$datos->api_token)->first();
+
+            if($empleado->puesto == "Directivo"){
+                $permisos = 2;
+            }else{
+                $permisos = 1;
+            }
+        } catch (\Exception $e) {
+            $respuesta['msg'] = $e->getMessage();
+            $respuesta['status'] = 0;
+        }
+       
+        return $permisos;
+    }
     public function registro(Request $req){
         $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
 
@@ -94,6 +111,49 @@ class UsersController extends Controller
                 }
             }
         return response()->json($respuesta);
+    }
+    public function listaEmpleados(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos); //Decodificamos el json para poder ver los distintos componentes
+
+        $permisos = $this->permisos($datos);
+
+        switch ($permisos) {
+            case '1':
+                try {
+                    $empleados = User::where('puesto',"Empleado")->get();
+                    foreach ($empleados as $empleado) {//Por cada video de este curso, nos hacemos una ejecucuion de esta secion de codigo para comprobar si este usuario lo ha visto
+                        array_push($respuesta, "Nombre: ".$empleado->name, "Puesto: ".$empleado->puesto,"Salario: ".$empleado->salario); 
+                    }
+                    $respuesta['status'] = 1;
+                    $respuesta['msg'] = "Se han listado los empleados " ;
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0;
+                }
+                break;
+            case '2':
+                try {
+                    $empleados = User::where('puesto',"Empleado")->orWhere('puesto', 'RRHH')->get();
+                    foreach ($empleados as $empleado) {//Por cada video de este curso, nos hacemos una ejecucuion de esta secion de codigo para comprobar si este usuario lo ha visto
+                        array_push($respuesta, "Nombre: ".$empleado->name, "Puesto: ".$empleado->puesto,"Salario: ".$empleado->salario); //$respuesta .= $empleado->name. ", ".$empleado->puesto.", ".$empleado->salario."\n";  
+                    }
+                    $respuesta['status'] = 1;
+                    $respuesta['msg'] = "Se han listado los empleados y RRHH " ;
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0;
+                }
+                break;
+            default:
+                $respuesta['status'] = 0;
+                $respuesta['msg'] = "Se ha producido un fallo con los perimisos" ;
+                break;
+        }
+
+        return response()->json($respuesta);//Nos devolbemos una respuesta con un mensaje
     }
 }
 

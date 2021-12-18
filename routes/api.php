@@ -20,6 +20,7 @@ Route::prefix('user')->group(function(){
  Route::put('/login',[UsersController::class, 'logIn'])->withoutMiddleware("check-user");
  Route::put('/registro',[UsersController::class, 'registro']);
  Route::get('/listar',[UsersController::class, 'listaEmpleados']);
+ Route::get('/detalles',[UsersController::class, 'detallesEmpleado']);
 
        });
 });

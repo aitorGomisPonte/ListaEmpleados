@@ -123,10 +123,8 @@ class UsersController extends Controller
         switch ($permisos) {
             case '1':
                 try {
-                    $empleados = User::where('puesto',"Empleado")->get();
-                    foreach ($empleados as $empleado) {//Por cada video de este curso, nos hacemos una ejecucuion de esta secion de codigo para comprobar si este usuario lo ha visto
-                        array_push($respuesta, "Nombre: ".$empleado->name, "Puesto: ".$empleado->puesto,"Salario: ".$empleado->salario); 
-                    }
+                    $empleados = User::select("name", "puesto", "salario")->where('puesto',"Empleado")->get();
+                    $respuesta = $empleados;
                     $respuesta['status'] = 1;
                     $respuesta['msg'] = "Se han listado los empleados " ;
                 } catch (\Exception $e) {
@@ -136,10 +134,8 @@ class UsersController extends Controller
                 break;
             case '2':
                 try {
-                    $empleados = User::where('puesto',"Empleado")->orWhere('puesto', 'RRHH')->get();
-                    foreach ($empleados as $empleado) {//Por cada video de este curso, nos hacemos una ejecucuion de esta secion de codigo para comprobar si este usuario lo ha visto
-                        array_push($respuesta, "Nombre: ".$empleado->name, "Puesto: ".$empleado->puesto,"Salario: ".$empleado->salario); //$respuesta .= $empleado->name. ", ".$empleado->puesto.", ".$empleado->salario."\n";  
-                    }
+                    $empleados = User::select("name", "puesto", "salario")->where('puesto',"Empleado")->orWhere('puesto', 'RRHH')->get();
+                    $respuesta = $empleados;
                     $respuesta['status'] = 1;
                     $respuesta['msg'] = "Se han listado los empleados y RRHH " ;
                 } catch (\Exception $e) {
@@ -154,6 +150,52 @@ class UsersController extends Controller
         }
 
         return response()->json($respuesta);//Nos devolbemos una respuesta con un mensaje
+    }/*En esta funcion damos los detalles de un empleado recibiendo apiToken y el id de usuario*/
+    public function detallesEmpleado(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos); //Decodificamos el json para poder ver los distintos componentes
+
+        $validator = Validator::make(json_decode($req->getContent(),true),[
+            'id' => "required"
+            ]);
+            //Comporbamos el estado del validador
+            if($validator->fails()){
+                $respuesta['msg'] = "Ha habido un fallo con los datos introducidos";
+                $respuesta['status'] = 0;         
+            }else{
+                $permisos = $this->permisos($datos);  
+                try {
+                    $empleado = User::select("name","email", "puesto", "biografia", "salario" )->where("id", $datos->id)->first();
+                    if($empleado){
+                        if($empleado->puesto == "Directivo"){
+                            $respuesta['status'] = 0;
+                            $respuesta['msg'] = "No se puede hacer esta accion ya que no se pueden ver los detalles de los directivos" ;
+                        }else if($empleado->puesto == "RRHH"){
+                            if($permisos > 1){
+                                $respuesta = $empleado;
+                                $respuesta['status'] = 1;
+                                $respuesta['msg'] = "Se han listado los datos del empleado de RRHH";
+                            }else{
+                                $respuesta['status'] = 0;
+                                $respuesta['msg'] = "No se tiene permiso para acceder a la informacion de este empleado";
+                            }
+                        }else{
+                            $respuesta = $empleado;
+                            $respuesta['status'] = 1;
+                            $respuesta['msg'] = "Se han listado los datos del empleado";
+                        }
+                    }else{
+                        $respuesta['status'] = 0;
+                        $respuesta['msg'] = "El id de empleado no existe, ".$datos->id;
+                    }
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0; 
+                 }
+            }
+            return response()->json($respuesta);     
     }
 }
 

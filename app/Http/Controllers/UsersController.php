@@ -317,14 +317,13 @@ class UsersController extends Controller
     }
     public function recuperarPass(Request $req){
         $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
-        $modificar = false;
         $datos = $req->getContent(); //Nos recibimos los datos por el body
         $datos = json_decode($datos);
         try {
            $empleado = User::where("email",$datos->email)->first();
            if($empleado){
                $pass = $this->automaticPass();
-               Mail::to("aitorzoolocal@gmail.com")->send(new NuevaPassword("Cambio de contraseña","Nueva Contraseña", "La contraseña del usuario ha sido cambiada a: ".$pass));
+               Mail::to($empleado->email)->send(new NuevaPassword("Cambio de contraseña","Nueva Contraseña", "La contraseña del usuario ha sido cambiada a: ".$pass));
                $empleado->password = $pass;
                $empleado->save();
                $respuesta['msg'] = "La contraseña del usuario ha sido cambiada a: ".$pass;

@@ -80,9 +80,9 @@ class UsersController extends Controller
         
         $validator = Validator::make(json_decode($req->getContent(),true),[
             'name' => "required",
-            'email' => "required|unique:users",
+            'email' => "required|unique:users|email:rfc,dns",
             'biografia' => "required",
-            'password' => "required ",
+            'password' => "required|regex:/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}/ ",
             'puesto' => "required",
             'salario'=> "required",
             
@@ -196,6 +196,122 @@ class UsersController extends Controller
                  }
             }
             return response()->json($respuesta);     
+    }
+    public function verPerfil(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos);
+        $validator = Validator::make(json_decode($req->getContent(),true),[
+            'api_token' => "required",
+           
+            ]);
+            //Comporbamos el estado del validador
+            if($validator->fails()){
+                $respuesta['msg'] = "Ha habido un fallo con los datos introducidos";
+                $respuesta['status'] = 0;     
+            }else{
+                try {
+                    $empleado = User::where("api_token",$datos->api_token)->first();
+                    if($empleado){
+                        $respuesta = $empleado;
+                        $respuesta['status'] = 1;
+                        $respuesta['msg'] = "Se han listado los datos del empleado";
+                    }else{
+                        $respuesta['status'] = 0;
+                        $respuesta['msg'] = "El empleado no existe";
+                    }
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0; 
+                }
+            }
+        return response()->json($respuesta); 
+    }
+    public function modificarDatos(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+        $modificar = false;
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos);
+        try {
+            $empleado = User::where("id",$datos->id)->first();
+            $permiso = $this->permisos($datos); 
+            if($empleado){  
+                switch ($empleado->puesto) {
+                    case 'Directivo':
+                        $changer = User::where("api_token",$datos->api_token)->first();
+                        if($changer->id == $empleado->id){
+                            $modificar = true;
+                        }else{
+                            $respuesta['status'] = 0;
+                            $respuesta['msg'] = "No se pueden modificar estos datos";
+                        }
+                        break;
+                    case 'RRHH':
+                        if($permiso > 1){
+                            $modificar = true;
+                        }else{
+                            $respuesta['status'] = 0;
+                            $respuesta['msg'] = "No se pueden modificar estos datos";
+                        }
+                        break; 
+                    default:
+                        $modificar = true; 
+                        break;
+                }    
+            }else{
+                $respuesta['status'] = 0;
+                $respuesta['msg'] = "El empleado no existe";
+            }
+        } catch (\Exception $e) {
+            $respuesta['msg'] = $e->getMessage();
+            $respuesta['status'] = 0;
+        }
+        if($modificar){
+            $validator = Validator::make(json_decode($req->getContent(),true),[
+                'name' => "String",
+                'email'=> "unique:users|email:rfc,dns",
+                'biografia' => "",
+                'password' => "regex:/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}/",//regex:(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$
+                'puesto' => "",
+                'salario'=> "integer",
+    
+               
+            ]);
+                //Comporbamos el estado del validador
+            if($validator->fails()){
+                $respuesta['msg'] = "Ha habido un fallo con los datos introducidos";
+                $respuesta['status'] = 0;     
+            }else{
+                try {
+                    if(isset($datos->name)){
+                        $empleado->name = $datos->name;
+                    }
+                    if(isset($datos->email)){
+                        $empleado->email = $datos->email;
+                    }
+                    if(isset($datos->password)){
+                        $empleado->password = $datos->password;
+                    }
+                    if(isset($datos->biografia)){
+                        $empleado->biografia = $datos->biografia;
+                    }
+                    if(isset($datos->puesto)){
+                        $empleado->puesto = $datos->puesto;
+                    }
+                    if(isset($datos->salario)){
+                        $empleado->salario = $datos->salario;
+                    }
+                    $empleado->save();
+                    $respuesta['msg'] = "Se ha modificado los datos del usuario con id: ".$empleado->id;
+                    $respuesta['status'] = 1; 
+                } catch (\Exception $e) {
+                    $respuesta['msg'] = $e->getMessage();
+                    $respuesta['status'] = 0;
+                }   
+            }
+        }
+        return response()->json($respuesta);
     }
 }
 

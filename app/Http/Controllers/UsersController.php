@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NuevaPassword;
 
 class UsersController extends Controller
 {
@@ -13,7 +15,7 @@ class UsersController extends Controller
      -primero: Recibimos los datos por el body, lo decodificamos de json
      -segundo: usamos el validator para comprobar lo recibido
      -tercero: una vez comprobado, buscamos el email y la contraseña, y si estas coinsiden
-     -cuarto: si es asi, nos creamos un nuevo token, guardado en la tabla para que se pueda usar durante un tiempo
+     -cuarto: si es asi, nos creamos un nuevo token, guardado en la tabla para que se pueda usar durante un tiempo(en nustro caso no tenemos que se caduque, asi que sirve hasta que se ha ga otro login)
      -quinto: */
     public function logIn(Request $req){
 
@@ -312,6 +314,52 @@ class UsersController extends Controller
             }
         }
         return response()->json($respuesta);
+    }
+    public function recuperarPass(Request $req){
+        $respuesta = ["status" => 1,"msg" => ""];//Usamos esto para comunicarnos con el otro lado del servidor
+        $modificar = false;
+        $datos = $req->getContent(); //Nos recibimos los datos por el body
+        $datos = json_decode($datos);
+        try {
+           $empleado = User::where("email",$datos->email)->first();
+           if($empleado){
+               $pass = $this->automaticPass();
+               Mail::to("aitorzoolocal@gmail.com")->send(new NuevaPassword("Cambio de contraseña","Nueva Contraseña", "La contraseña del usuario ha sido cambiada a: ".$pass));
+               $empleado->password = $pass;
+               $empleado->save();
+               $respuesta['msg'] = "La contraseña del usuario ha sido cambiada a: ".$pass;
+               $respuesta['status'] = 1; 
+                  
+           }else{
+                $respuesta['msg'] = "El usuario no existe";
+                $respuesta['status'] = 0; 
+           }
+        } catch (\Exception $e) {
+            $respuesta['msg'] = $e->getMessage();
+            $respuesta['status'] = 0;
+        }
+        return response()->json($respuesta);
+    }
+    private function automaticPass(){
+        $password = "";
+        $arrayNum = [1,2,3,4,5,6,7,8,9];
+        $arrayAlphm = ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','ñ','z','x','c','v','b','n','m'];
+        $arrayAlphM = ['Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Ñ','Z','X','C','V','B','N','M'];
+        $arrayCha = ['*','-','+','!','@','¢'];
+        for ($i=0; $i < 2 ; $i++) { 
+            $password .= array_rand($arrayAlphm);
+        }
+        for ($j=0; $j < 2 ; $j++) { 
+            $password .= array_rand($arrayNum);
+        }
+        for ($k=0; $k < 2 ; $k++) { 
+            $password .= array_rand($arrayAlphM);
+        }
+        for ($l=0; $l < 2 ; $l++) { 
+            $password .= array_rand($arrayCha);
+        }
+
+        return $password;
     }
 }
 

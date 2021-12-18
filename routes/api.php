@@ -23,6 +23,7 @@ Route::prefix('user')->group(function(){
  Route::get('/detalles',[UsersController::class, 'detallesEmpleado']);
  Route::get('/verPerfil',[UsersController::class, 'verPerfil'])->withoutMiddleware("check-user");
  Route::post('/modificar',[UsersController::class, 'modificarDatos']);
+ Route::post('recuperar',[UsersController::class, 'recuperarPass'])->withoutMiddleware("check-user");
 
        });
 });

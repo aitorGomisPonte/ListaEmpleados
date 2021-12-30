@@ -58,7 +58,7 @@ class UsersController extends Controller
         for ($i=0; $i < 6; $i++) {//Hscemos este for 6 veces para selecionar 6 numeros random
             $tokenAux .= $posiblesNumeros[array_rand($posiblesNumeros)];//Lo añadimos a un string, array rand para numero random
         }
-        return md5($tokenAux);//Encriptamos con md5 el token para no tener problams en los json o rutas 
+    return md5($tokenAux);//Encriptamos con md5 el token para no tener problams en los json o rutas 
     }
     /*Esta funcion es la encargada de comporbar los permisos tras el primer middelware.
      -primero: nos creamos la variable permisos: 1 = RRHH, 2 = Directivo, 0 = fallo con los permisos
@@ -78,7 +78,7 @@ class UsersController extends Controller
             $respuesta['msg'] = $e->getMessage();
             $respuesta['status'] = 0;
         }
-        return $permisos;
+    return $permisos;
     }
     /*En esta funcion realicamos el regustro de nuevos trabajadores:
      -primero: usando un validator, comprobamos el estado de los datos que se nos han pasado para crear el nuevo empleado
@@ -213,7 +213,7 @@ class UsersController extends Controller
                     $respuesta['status'] = 0; 
                  }
             }
-            return response()->json($respuesta);     
+        return response()->json($respuesta);     
     }
     /*En esta funcion recibimos el apitoken de la persona logeada y le devolbemos toda su informacion
      -primero: comprobamos que se ha enviado el apitoken
@@ -374,25 +374,30 @@ class UsersController extends Controller
     }
     /*Creacion de la contraseña automatica */
     private function automaticPass(){
+        $controlEx = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}/";
         $password = "";
-        $arrayNum = [1,2,3,4,5,6,7,8,9];
-        $arrayAlphm = ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','ñ','z','x','c','v','b','n','m'];
-        $arrayAlphM = ['Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Ñ','Z','X','C','V','B','N','M'];
-        $arrayCha = ['*','-','+','!','@','¢'];
-        for ($i=0; $i < 2 ; $i++) { 
-            $password .= array_rand($arrayAlphm);
-        }
-        for ($j=0; $j < 2 ; $j++) { 
-            $password .= array_rand($arrayNum);
-        }
-        for ($k=0; $k < 2 ; $k++) { 
-            $password .= array_rand($arrayAlphM);
-        }
-        for ($l=0; $l < 2 ; $l++) { 
-            $password .= array_rand($arrayCha);
-        }
-
-        return $password;
+        do {
+            $option = rand(1,3);
+            switch ($option) {
+                case '1'://Numbers
+                    $aux = rand(48,57);
+                    $password .= chr($aux);
+                    break;
+                case '2'://Upper case
+                    $aux = rand(65,90);
+                    $password .=chr($aux);
+                    break;
+                case '3'://Lower case
+                    $aux = rand(97,122);
+                    $password .= chr($aux);
+                    break;    
+                default://No necesitamos caracteres especiales, pero si hay algu fallo en el switch lo sabremos is estan estos presentes
+                    $aux = rand(33,46);
+                    $password .= chr($aux);
+                    break;
+            }              
+        } while((preg_match($controlEx, $password) === 0));// Comprobamos is la contraseña construida cumple con los requisitos
+    return $password;
     }
 }
 

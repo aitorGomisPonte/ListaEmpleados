@@ -31,6 +31,7 @@ class UsersController extends Controller
                     $token = $this->crearToken($trabajador);//Si todo va bien entonces nos creamos un token usando la funcion de crear token
                     $trabajador->api_token = $token;//Nos guardamos la token en el json 
                     $trabajador->save();//Guardamos el nuevo Json en la tabla
+                    $respuesta["api_token"] = $token;
                     $respuesta['msg'] = "Se ha echo el login, apitoken creada";
                     $respuesta['status'] = 1;
                 } else{//Si la contraseña no coincide entonces llegamos aqui

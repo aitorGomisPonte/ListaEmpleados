@@ -304,7 +304,7 @@ class UsersController extends Controller
                 'email'=> "unique:users|email:rfc,dns",
                 'biografia' => "",
                 'password' => "regex:/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}/",//8 cifras mayusculas minusculas y numeros obligatorios
-                'puesto' => "",
+                'puesto' => "in:Profesional,Particular,Administrador",
                 'salario'=> "integer",
     
                
